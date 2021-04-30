@@ -1,0 +1,11 @@
+{
+  "private": true,
+  "name": "@the-social-network/root",
+  "workspaces": ["lib/**"],
+  "scripts": {
+    "watch": "yarn workspace @the-social-network/server watch",
+    "server:dev": "yarn workspace @the-social-network/server dev",
+    "client:dev": "yarn workspace @the-social-network/client dev"
+  },
+  "license": "MIT"
+}
