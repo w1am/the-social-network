@@ -1,17 +1,25 @@
 import React from 'react'
+import { FaSpinner } from 'react-icons/fa'
 
 interface SubmitProps {
-  label: string
+  label: string;
+  loading: boolean;
 }
 
-export const Submit: React.FC<SubmitProps> = ({ label }) => {
+export const Submit: React.FC<SubmitProps> = ({ label, loading }) => {
   return (
     <div className="mt-5">
-      <input
-        className="px-4 py-2 cursor-pointer rounded-md bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+      <button
         type="submit"
-        value={label}
-      />
+        className="w-full px-4 py-3 disabled:cursor-default disabled:bg-blue-500 cursor-pointer rounded-md bg-blue-600 text-white hover:bg-blue-700 transition-colors ease-in-out duration-300"
+      >
+        <div className="flex justify-center">
+          {loading && (
+            <FaSpinner size={16} className="animate-spin my-auto mr-2" />
+          )}
+          {label}
+        </div>
+      </button>
     </div>
   );
 }

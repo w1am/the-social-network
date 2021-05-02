@@ -9,6 +9,7 @@ import { buildSchema } from "type-graphql";
 import { User } from "./entities/User";
 import { UserResolver } from "./resolvers/user";
 import { COOKIE_NAME, COOKIE_PASSWORD, __prod__ } from "./constants";
+import { GreetResolver } from "./resolvers/greet";
 
 const main = async () => {
   await createConnection({
@@ -21,42 +22,39 @@ const main = async () => {
     entities: [User],
   });
 
-  const redis = new Redis();
   const RedisStore = connectRedis(session)
+  const redis = new Redis();
 
   const app = express();
-
-  redis.on("error", (err) => console.log("Error " + err));
 
   app.use(
     cors({
       origin: "http://localhost:3000",
-      credentials: true,
+      credentials: true
     })
   );
 
   app.use(
     session({
-      store: new RedisStore({ client: redis }),
       name: COOKIE_NAME,
-      secret: COOKIE_PASSWORD,
-      resave: false,
-      saveUninitialized: false,
+      store: new RedisStore({ client: redis, disableTouch: true }),
       cookie: {
         maxAge: 1000 * 60 * 60 * 24 * 365 * 10,
         httpOnly: true,
         sameSite: "lax",
         secure: __prod__,
       },
+      saveUninitialized: false,
+      secret: COOKIE_PASSWORD,
+      resave: false,
     })
   );
-
 
   app.get("/", (_, res) => res.render("<h1>Hello from Server</h1>"));
 
   const apolloServer = new ApolloServer({
     schema: await buildSchema({
-      resolvers: [UserResolver],
+      resolvers: [UserResolver, GreetResolver],
       validate: false,
     }),
     context: ({ req, res }) => ({
