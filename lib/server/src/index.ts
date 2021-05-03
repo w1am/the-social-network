@@ -10,6 +10,9 @@ import { User } from "./entities/User";
 import { UserResolver } from "./resolvers/user";
 import { COOKIE_NAME, COOKIE_PASSWORD, __prod__ } from "./constants";
 import { GreetResolver } from "./resolvers/greet";
+import { PostResolver } from "./resolvers/post";
+import { Post } from "./entities/Post";
+import path from 'path';
 
 const main = async () => {
   await createConnection({
@@ -19,7 +22,8 @@ const main = async () => {
     password: "password",
     logging: true,
     synchronize: true,
-    entities: [User],
+    migrations: [path.join(__dirname, './migrations/*')],
+    entities: [User, Post],
   });
 
   const RedisStore = connectRedis(session)
@@ -54,7 +58,7 @@ const main = async () => {
 
   const apolloServer = new ApolloServer({
     schema: await buildSchema({
-      resolvers: [UserResolver, GreetResolver],
+      resolvers: [UserResolver, PostResolver, GreetResolver],
       validate: false,
     }),
     context: ({ req, res }) => ({

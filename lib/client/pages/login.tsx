@@ -14,7 +14,7 @@ const login: React.FC<RegisterProps> = () => {
   const [ ,login ] = useLoginMutation();
   return (
     <Wrapper size="sm">
-      <h1 className="text-2xl font-medium mb-8">Login</h1>
+      <h1 className="page-header">Login</h1>
 
       <Formik
         initialValues={{ username: "", password: "" }}

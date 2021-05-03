@@ -29,6 +29,16 @@ const client = createClient({
     cacheExchange({
       updates: {
         Mutation: {
+          createPost: (_result, args, cache, info) => {
+            const allFields = cache.inspectFields("Query");
+            console.log('allFields', allFields)
+            const fieldInfos = allFields.filter((info) => info.fieldName === "posts");
+            console.log("fieldInfos", fieldInfos)
+            // fieldInfos.forEach((fi) => {
+            //   cache.invalidate("Query", "posts", fi.arguments || {});
+            // });
+            cache.invalidate("Query", "posts", {});
+          },
           logout: (_result: any, _, cache) => {
             cache.updateQuery({ query: MeDocument }, (_: any) => {
               return { me: null }

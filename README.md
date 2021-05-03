@@ -1,6 +1,6 @@
 ### The Social Network
 
-Building a full stack web application using Typescript and GraphQL, PostgresSQL and URQL
+Building a full stack web application using Typescript, GraphQL, Postgres and URQL
 
 **Why?**
 
@@ -14,3 +14,7 @@ This is merely a side project to help me master the new technologies I've been l
 - React to posts
 - Send message to friends
 
+**Research**
+
+- Pagination methods: [types of pagination](https://slack.engineering/evolving-api-pagination-at-slack/#:~:text=Cursor%2Dbased%20pagination%20works%20by,results%20after%20the%20given%20pointer.&text=There%20is%20no%20concept%20of,jump%20to%20a%20specific%20page.)
+- Normalized cache : [Cache updates](https://formidable.com/open-source/urql/docs/graphcache/cache-updates/)

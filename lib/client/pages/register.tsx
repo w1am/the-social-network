@@ -14,7 +14,7 @@ const register: React.FC<RegisterProps> = () => {
   const [, register] = useRegisterMutation();
   return (
     <Wrapper size="sm">
-      <h1 className="text-2xl font-medium mb-8">Register</h1>
+      <h1 className="page-header">Register</h1>
 
       <Formik
         initialValues={{ username: "", password: "", confirmPassword: "" }}
