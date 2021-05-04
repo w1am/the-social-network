@@ -6,7 +6,7 @@ import ProgressBar from "@badrap/bar-of-progress";
 import Router from "next/router";
 
 import "../styles/index.css";
-import { cacheExchange } from "@urql/exchange-graphcache";
+import { Cache, cacheExchange } from "@urql/exchange-graphcache";
 import { MeDocument } from "../generated/graphql";
 import { devtoolsExchange } from "@urql/devtools";
 
@@ -16,6 +16,14 @@ const progress = new ProgressBar({
   className: "bar-of-progress",
   delay: 100,
 });
+
+const invalidatePosts = (cache: Cache) => {
+  const allFields = cache.inspectFields("Query");
+  const fieldInfos = allFields.filter((info) => info.fieldName === "posts");
+  fieldInfos.forEach((fi) => {
+    cache.invalidate("Query", "posts", fi.arguments || {});
+  });
+};
 
 Router.events.on("routeChangeStart", progress.start);
 Router.events.on("routeChangeComplete", progress.finish);
@@ -29,15 +37,11 @@ const client = createClient({
     cacheExchange({
       updates: {
         Mutation: {
-          createPost: (_result, args, cache, info) => {
-            const allFields = cache.inspectFields("Query");
-            console.log('allFields', allFields)
-            const fieldInfos = allFields.filter((info) => info.fieldName === "posts");
-            console.log("fieldInfos", fieldInfos)
-            // fieldInfos.forEach((fi) => {
-            //   cache.invalidate("Query", "posts", fi.arguments || {});
-            // });
-            cache.invalidate("Query", "posts", {});
+          createPost: (_result, _args, cache, _info) => {
+            invalidatePosts(cache)
+          },
+          vote: (_result, _args, cache, _info) => {
+            invalidatePosts(cache)
           },
           logout: (_result: any, _, cache) => {
             cache.updateQuery({ query: MeDocument }, (_: any) => {

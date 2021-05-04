@@ -4,7 +4,7 @@ import { FaSpinner } from 'react-icons/fa'
 interface SubmitProps {
   label: string;
   loading: boolean;
-  onClick: any
+  onClick?: any
 }
 
 export const Submit: React.FC<SubmitProps> = ({ label, loading, ...props }) => {

@@ -3,5 +3,16 @@ query posts($limit: Float!, $cursor: Float!) {
     id
     description
     userId
+    commentators
+    comments {
+      comment
+      username
+    }
+    user {
+      id
+      username
+    }
+    status
+    likes
   }
 }

@@ -1,10 +1,52 @@
 import { MyContext } from "src/types";
-import { Arg, Ctx,  Mutation, Query, Resolver } from "type-graphql";
+import { Arg, Ctx,  Field,  FieldResolver, Mutation, ObjectType, Query, Resolver, Root } from "type-graphql";
 import { getManager } from "typeorm";
 import { Post } from '../entities/Post';
+import { User } from "../entities/User";
+import { Vote } from "../entities/Vote";
+
+@ObjectType()
+class CommentField {
+  @Field()
+  comment: string;
+  @Field()
+  username: string;
+}
 
 @Resolver(Post)
 export class PostResolver {
+  @FieldResolver(() => User)
+  user(@Root() post: Post) {
+    return User.findOne(post.userId)
+  }
+
+  @FieldResolver(() => [CommentField])
+  async comments(@Root() post: Post) : Promise<CommentField[]> {
+    const comments = await getManager().query(`
+      SELECT comment, "user".username FROM comment INNER JOIN "user" ON comment."userId"="user".id;
+    `)
+    return comments
+  }
+
+  @FieldResolver(() => Boolean)
+  async status(@Root() post: Post, @Ctx() { req } : MyContext) {
+    if (req.session.userId) {
+      const vote = await Vote.findOne({
+        where: {
+          postId: post.id,
+          userId: req.session.userId
+        }
+      })
+      if (vote) {
+        return vote.status
+      } else {
+        return false
+      }
+    } else {
+      return null
+    }
+  }
+
   @Query(() => [Post], { nullable: true })
   async posts(
     @Arg("limit") limit: number,

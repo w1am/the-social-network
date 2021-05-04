@@ -14,6 +14,12 @@ export type Scalars = {
   Float: number;
 };
 
+export type CommentField = {
+  __typename?: 'CommentField';
+  comment: Scalars['String'];
+  username: Scalars['String'];
+};
+
 export type FieldError = {
   __typename?: 'FieldError';
   field: Scalars['String'];
@@ -26,6 +32,8 @@ export type Mutation = {
   register: UserResponse;
   login: UserResponse;
   createPost?: Maybe<Post>;
+  vote: Scalars['Boolean'];
+  comment: Scalars['Boolean'];
 };
 
 
@@ -43,11 +51,27 @@ export type MutationCreatePostArgs = {
   description: Scalars['String'];
 };
 
+
+export type MutationVoteArgs = {
+  postId: Scalars['Int'];
+};
+
+
+export type MutationCommentArgs = {
+  comment: Scalars['String'];
+  postId: Scalars['Int'];
+};
+
 export type Post = {
   __typename?: 'Post';
   id: Scalars['String'];
+  likes: Scalars['Float'];
+  commentators: Scalars['Float'];
   description: Scalars['String'];
   userId: Scalars['Float'];
+  user: User;
+  comments: Array<CommentField>;
+  status: Scalars['Boolean'];
 };
 
 export type Query = {
@@ -148,6 +172,16 @@ export type RegisterMutation = (
   ) }
 );
 
+export type VoteMutationVariables = Exact<{
+  postId: Scalars['Int'];
+}>;
+
+
+export type VoteMutation = (
+  { __typename?: 'Mutation' }
+  & Pick<Mutation, 'vote'>
+);
+
 export type MeQueryVariables = Exact<{ [key: string]: never; }>;
 
 
@@ -169,7 +203,14 @@ export type PostsQuery = (
   { __typename?: 'Query' }
   & { posts?: Maybe<Array<(
     { __typename?: 'Post' }
-    & Pick<Post, 'id' | 'description' | 'userId'>
+    & Pick<Post, 'id' | 'description' | 'userId' | 'commentators' | 'status' | 'likes'>
+    & { comments: Array<(
+      { __typename?: 'CommentField' }
+      & Pick<CommentField, 'comment' | 'username'>
+    )>, user: (
+      { __typename?: 'User' }
+      & Pick<User, 'id' | 'username'>
+    ) }
   )>> }
 );
 
@@ -237,6 +278,15 @@ export const RegisterDocument = gql`
 export function useRegisterMutation() {
   return Urql.useMutation<RegisterMutation, RegisterMutationVariables>(RegisterDocument);
 };
+export const VoteDocument = gql`
+    mutation Vote($postId: Int!) {
+  vote(postId: $postId)
+}
+    `;
+
+export function useVoteMutation() {
+  return Urql.useMutation<VoteMutation, VoteMutationVariables>(VoteDocument);
+};
 export const MeDocument = gql`
     query Me {
   me {
@@ -255,6 +305,17 @@ export const PostsDocument = gql`
     id
     description
     userId
+    commentators
+    comments {
+      comment
+      username
+    }
+    user {
+      id
+      username
+    }
+    status
+    likes
   }
 }
     `;

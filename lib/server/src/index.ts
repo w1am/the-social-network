@@ -6,13 +6,13 @@ import cors from 'cors';
 import { createConnection } from "typeorm";
 import { ApolloServer } from "apollo-server-express";
 import { buildSchema } from "type-graphql";
-import { User } from "./entities/User";
 import { UserResolver } from "./resolvers/user";
 import { COOKIE_NAME, COOKIE_PASSWORD, __prod__ } from "./constants";
 import { GreetResolver } from "./resolvers/greet";
 import { PostResolver } from "./resolvers/post";
-import { Post } from "./entities/Post";
 import path from 'path';
+import { VoteResolver } from "./resolvers/vote";
+import { CommentResolver } from "./resolvers/comment";
 
 const main = async () => {
   await createConnection({
@@ -23,7 +23,7 @@ const main = async () => {
     logging: true,
     synchronize: true,
     migrations: [path.join(__dirname, './migrations/*')],
-    entities: [User, Post],
+    entities: [path.join(__dirname, '/entities/**')],
   });
 
   const RedisStore = connectRedis(session)
@@ -58,7 +58,7 @@ const main = async () => {
 
   const apolloServer = new ApolloServer({
     schema: await buildSchema({
-      resolvers: [UserResolver, PostResolver, GreetResolver],
+      resolvers: [UserResolver, PostResolver, CommentResolver, GreetResolver, VoteResolver],
       validate: false,
     }),
     context: ({ req, res }) => ({

@@ -1,15 +1,17 @@
 import React from "react";
 import Wrapper from "../components/Wrapper";
-import { Formik, Form, FormikErrors } from "formik";
+import { Formik, Form } from "formik";
 import TextField from "../components/forms/TextField";
 import Submit from "../components/buttons/Submit";
 import { FieldError, useCreatePostMutation } from "../generated/graphql";
 import { toErrorMap } from "../utils/toErrorMap";
+import { useRouter } from 'next/router'
 
 interface CreatePostProps {}
 
 export const CreatePost: React.FC<CreatePostProps> = ({}) => {
   const [ ,createPost ] = useCreatePostMutation()
+  const router = useRouter()
   return (
     <Wrapper size="sm">
       <h1 className="page-header">Create Post</h1>
@@ -23,6 +25,7 @@ export const CreatePost: React.FC<CreatePostProps> = ({}) => {
             setErrors(toErrorMap([...errors]));
           } else {
             await createPost(values)
+            router.push('/')
           }
         }}
       >
