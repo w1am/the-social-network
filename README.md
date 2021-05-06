@@ -9,10 +9,10 @@ This is merely a side project to help me master the new technologies I've been l
 **Expected Features**
 
 - User authentication
-- Send / Accept friend request
+- Send / Accept friend requests
 - Create / update / delete post(s)
 - React to posts
-- Send message to friends
+- Send messages to friends
 
 **Research**
 

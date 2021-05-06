@@ -1,0 +1,10 @@
+query FriendRequests {
+  friendRequests {
+    id
+    status
+    user {
+      id
+      username
+    }
+  }
+}

@@ -11,17 +11,21 @@
   "dependencies": {
     "@badrap/bar-of-progress": "^0.1.2",
     "@urql/devtools": "^2.0.3",
+    "@urql/exchange-auth": "^0.1.2",
     "@urql/exchange-graphcache": "^4.0.0",
     "formik": "^2.2.6",
     "graphql": "^15.5.0",
     "graphql-tag": "^2.12.4",
+    "js-cookie": "^2.2.1",
     "next": "latest",
     "next-apollo": "^5.0.4",
+    "next-urql": "^3.0.1",
     "react": "^17.0.1",
     "react-dom": "^17.0.1",
     "react-icons": "^4.2.0",
     "react-spinners": "^0.10.6",
-    "urql": "^2.0.2"
+    "urql": "^2.0.2",
+    "wonka": "^4.0.15"
   },
   "devDependencies": {
     "@fullhuman/postcss-purgecss": "^4.0.3",
@@ -29,6 +33,7 @@
     "@graphql-codegen/typescript-operations": "1.17.16",
     "@graphql-codegen/typescript-react-apollo": "2.2.4",
     "@graphql-codegen/typescript-urql": "^2.0.6",
+    "@types/js-cookie": "^2.2.6",
     "@types/node": "^12.12.21",
     "@types/react": "^17.0.2",
     "@types/react-dom": "^17.0.1",

@@ -1,23 +1,26 @@
 import { Field, ObjectType } from "type-graphql";
-import { BaseEntity, Column, Entity, ManyToOne, PrimaryColumn } from "typeorm";
+import { BaseEntity, Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
 import { User } from "./User";
 import { Post } from "./Post";
 
 @ObjectType()
 @Entity()
 export class Comment extends BaseEntity {
-  @PrimaryColumn()
-  postId: number
+  @PrimaryGeneratedColumn()
+  id: string
 
-  @PrimaryColumn()
-  userId: number
+  @Field()
+  @Column()
+  comment: string
 
   @Column()
-  @Field()
-  comment: string
+  userId: number
 
   @ManyToOne(() => User, (user) => user.comments)
   user: User
+
+  @Column()
+  postId: number
 
   @ManyToOne(() => User, (post) => post.comments)
   post: Post

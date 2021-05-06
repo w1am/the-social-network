@@ -8,6 +8,8 @@ import { Vote } from "../entities/Vote";
 @ObjectType()
 class CommentField {
   @Field()
+  id: number;
+  @Field()
   comment: string;
   @Field()
   username: string;
@@ -23,7 +25,10 @@ export class PostResolver {
   @FieldResolver(() => [CommentField])
   async comments(@Root() post: Post) : Promise<CommentField[]> {
     const comments = await getManager().query(`
-      SELECT comment, "user".username FROM comment INNER JOIN "user" ON comment."userId"="user".id;
+      SELECT comment.id, comment, "user".username
+      FROM comment
+      INNER JOIN "user" ON comment."userId"="user".id
+      WHERE comment."postId"=${post.id};
     `)
     return comments
   }

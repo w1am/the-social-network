@@ -6,6 +6,8 @@ import Submit from "../components/buttons/Submit";
 import { FieldError, useCreatePostMutation } from "../generated/graphql";
 import { toErrorMap } from "../utils/toErrorMap";
 import { useRouter } from 'next/router'
+import { withUrqlClient } from "next-urql";
+import { createUrqlClient } from "../utils/createUrqlClient";
 
 interface CreatePostProps {}
 
@@ -40,4 +42,5 @@ export const CreatePost: React.FC<CreatePostProps> = ({}) => {
   );
 };
 
-export default CreatePost;
+export default withUrqlClient(createUrqlClient)(CreatePost);
+// export default CreatePost;

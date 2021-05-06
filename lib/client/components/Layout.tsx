@@ -17,7 +17,7 @@ const Layout = ({ children, title = "Social Network" }: Props) => (
 
     <Navbar />
 
-    <div className="pt-4 px-8 bg-gray-900 h-screen">{children}</div>
+    <div className="pt-4 px-32 bg-gray-900 h-screen">{children}</div>
   </div>
 );
 

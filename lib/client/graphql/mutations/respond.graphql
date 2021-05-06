@@ -1,0 +1,3 @@
+mutation Respond($status: Int!, $friendId: Int!) {
+  respond(status: $status, friendId: $friendId)
+}

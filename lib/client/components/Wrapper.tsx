@@ -1,7 +1,7 @@
 import React from "react";
 
 interface WrapperProps {
-  size?: "sm" | "md" | "lg" | "xl" | "2xl";
+  size?: "xs" | "sm" | "md" | "lg" | "xl" | "2xl";
 }
 
 export const Wrapper: React.FC<WrapperProps> = ({ children, size="md" }) => {

@@ -2,17 +2,20 @@ import {
   Arg,
   Ctx,
   Field,
+  FieldResolver,
   InputType,
   Mutation,
   ObjectType,
   Query,
   Resolver,
+  Root,
 } from "type-graphql";
 import { User } from "../entities/User";
 import { hash, verify } from "argon2";
 import { validateUsername, validatePassword } from "../utils/inputValidator";
 import { MyContext } from "../types";
 import { COOKIE_NAME } from "../constants";
+import { getConnection } from "typeorm";
 
 @ObjectType()
 class FieldError {
@@ -38,15 +41,55 @@ class UserInput {
   password!: string;
 }
 
-@Resolver()
+@ObjectType()
+class FriendField {
+  @Field()
+  id: number
+  @Field()
+  friendId: number
+  @Field()
+  username: string
+} 
+
+@Resolver(User)
 export class UserResolver {
+  @FieldResolver(() => [FriendField])
+  async friends(@Root() user: User) : Promise<FriendField[] | null> {
+    return await getConnection().createEntityManager().query(`
+      SELECT friend.id, friend."userId", friend."friendId", friend.status, "user".username
+      FROM friend
+      INNER JOIN "user" ON friend."friendId"="user".id
+      WHERE friend."userId"=${user.id} AND friend."status"=1;
+    `)
+  }
+
+  @Query(() => User)
+  async profile(@Arg('username', () => String) username: string): Promise<User | null> {
+    const user = await User.findOne({ where: { username } })
+    if (!user) {
+      return null
+    } else {
+      return user
+    }
+  }
+
+  @Query(() => [User])
+  async search(@Arg('query', () => String) query: string) : Promise<User[] | null> {
+    if (query.trim().length > 0) {
+      return await getConnection().createEntityManager().query(`
+        select * from "user" where username like '%${query.toLowerCase()}%';
+      `)
+    }
+    return null
+  }
+
   @Query(() => User, { nullable: true })
   me(@Ctx() { req }: MyContext) {
     if (!req.session.userId) {
       return null;
     }
 
-    return User.findOne(1);
+    return User.findOne(req.session.userId);
   }
 
   @Mutation(() => Boolean)
@@ -104,7 +147,6 @@ export class UserResolver {
     @Arg("input") { username, password }: UserInput,
     @Ctx() { req }: MyContext
   ): Promise<UserResponse | null> {
-    console.log(password)
     const previous = await User.findOne({ where: { username } });
     if (!previous) {
       return {

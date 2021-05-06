@@ -6,6 +6,8 @@ import { Formik, Form } from "formik";
 import TextField from "../components/forms/TextField";
 import { toErrorMap } from "../utils/toErrorMap";
 import { useRouter } from 'next/router';
+import { withUrqlClient } from "next-urql";
+import { createUrqlClient } from "../utils/createUrqlClient";
 
 interface RegisterProps {}
 
@@ -36,7 +38,7 @@ const register: React.FC<RegisterProps> = () => {
               toErrorMap([...response.data?.register.errors, ...errors])
             );
           } else {
-            router.push("/");
+            router.push("/login");
           }
         }}
       >
@@ -45,7 +47,7 @@ const register: React.FC<RegisterProps> = () => {
             <TextField name="username" type="text" />
             <TextField name="password" type="password" />
             <TextField name="confirmPassword" type="password" />
-            <Submit label="Register" loading={isSubmitting} />
+            <Submit separator={true} label="Register" loading={isSubmitting} />
           </Form>
         )}
       </Formik>
@@ -53,4 +55,4 @@ const register: React.FC<RegisterProps> = () => {
   );
 };
 
-export default register;
+export default withUrqlClient(createUrqlClient)(register);

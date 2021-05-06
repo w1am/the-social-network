@@ -4,15 +4,31 @@ import { FaSpinner } from 'react-icons/fa'
 interface SubmitProps {
   label: string;
   loading: boolean;
-  onClick?: any
+  onClick?: any;
+  separator?: boolean;
+  size?: "xs" | "s" | "md" | "lg";
 }
 
-export const Submit: React.FC<SubmitProps> = ({ label, loading, ...props }) => {
+export const Submit: React.FC<SubmitProps> = ({ label, loading, size="s", separator=false, ...props }) => {
   return (
-    <div className="mt-5">
+    <div className={`${separator ? 'mt-6' : ''}`}>
       <button
         type="submit"
-        className="w-full px-4 py-3 disabled:cursor-default disabled:bg-blue-500 cursor-pointer rounded-md bg-blue-600 text-white hover:bg-blue-700 transition-colors ease-in-out duration-300"
+        className={`
+          w-full
+          px-4 py-3
+          text-${size}
+          disabled:cursor-default
+          cursor-pointer
+          rounded-md
+          disabled:bg-blue-500
+          bg-blue-600
+          text-white
+          hover:bg-blue-700
+          transition-colors
+          ease-in-out
+          duration-300
+        `}
         disabled={loading}
         {...props}
       >

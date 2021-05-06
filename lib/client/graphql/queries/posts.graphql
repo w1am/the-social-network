@@ -5,6 +5,7 @@ query posts($limit: Float!, $cursor: Float!) {
     userId
     commentators
     comments {
+      id
       comment
       username
     }

@@ -1,11 +1,11 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import Reactor from "./Reactor";
-import { useVoteMutation } from "../../generated/graphql";
+import { Post, useVoteMutation } from "../../generated/graphql";
 import CommentSection from "./CommentSection";
 
 interface PostItemProps {
-  post: any;
+  post: Post | any;
 }
 
 export const PostItem: React.FC<PostItemProps> = ({ post }) => {
@@ -13,26 +13,26 @@ export const PostItem: React.FC<PostItemProps> = ({ post }) => {
   const [open, setOpen] = useState<boolean>(false);
   return (
     <div className="bg-gray-800 px-3 py-5 mb-3 rounded">
-      <p>{post.description}</p>
-      <Link href="/hello">
-        <p className="text-gray-500 mt-3 cursor-pointer w-min">
+      <Link href="/profile/:username" as={`/profile/${post.user.username}`}>
+        <p className="text-gray-500 mb-3 cursor-pointer w-min hover:text-gray-400">
           @{post.user.username}
         </p>
       </Link>
+      <p>{post.description}</p>
       <div className="flex">
         <p className="my-3 text-gray-300 mr-2">
           {post.likes} {post.likes > 1 ? "Likes" : "Like"}
         </p>
-        <p className="my-3 text-gray-300">
-          {post.likes} {post.commentators > 1 ? "Comments" : "Comment"}
+        <p className="my-3 text-gray-300 cursor-pointer" onClick={() => setOpen(!open)}>
+          {post.commentators} {post.commentators > 1 ? "Comments" : "Comment"}
         </p>
       </div>
       <div className="flex">
         <Reactor
           onClick={async () => await vote({ postId: parseInt(post.id) })}
-          label={post.status == 1 ? "Liked" : "Like"}
+          label={post.status ? "Liked" : "Like"}
         >
-          {post.status == 1 ? (
+          {post.status ? (
             <svg
               xmlns="http://www.w3.org/2000/svg"
               className="h-5 w-5 text-red-500 my-auto"
@@ -79,7 +79,7 @@ export const PostItem: React.FC<PostItemProps> = ({ post }) => {
           </svg>
         </Reactor>
       </div>
-      {open && <CommentSection comments={post.comments} />}
+      {open && <CommentSection postId={post.id} comments={post.comments} />}
     </div>
   );
 };

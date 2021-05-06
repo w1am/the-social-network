@@ -1,0 +1,16 @@
+query Profile($username: String!) {
+  profile(username: $username) {
+    id
+    username
+    createdAt
+    updatedAt
+    avatar
+    banner
+    intro
+    friends {
+      id
+      friendId
+      username
+    }
+  }
+}

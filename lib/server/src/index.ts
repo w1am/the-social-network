@@ -6,13 +6,14 @@ import cors from 'cors';
 import { createConnection } from "typeorm";
 import { ApolloServer } from "apollo-server-express";
 import { buildSchema } from "type-graphql";
-import { UserResolver } from "./resolvers/user";
 import { COOKIE_NAME, COOKIE_PASSWORD, __prod__ } from "./constants";
-import { GreetResolver } from "./resolvers/greet";
-import { PostResolver } from "./resolvers/post";
 import path from 'path';
 import { VoteResolver } from "./resolvers/vote";
 import { CommentResolver } from "./resolvers/comment";
+import { FriendResolver } from "./resolvers/friend";
+import { UserResolver } from "./resolvers/user";
+import { GreetResolver } from "./resolvers/greet";
+import { PostResolver } from "./resolvers/post";
 
 const main = async () => {
   await createConnection({
@@ -58,7 +59,7 @@ const main = async () => {
 
   const apolloServer = new ApolloServer({
     schema: await buildSchema({
-      resolvers: [UserResolver, PostResolver, CommentResolver, GreetResolver, VoteResolver],
+      resolvers: [UserResolver, PostResolver, FriendResolver, CommentResolver, GreetResolver, VoteResolver],
       validate: false,
     }),
     context: ({ req, res }) => ({
