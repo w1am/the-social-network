@@ -8,7 +8,7 @@ interface SearchInputProps {}
 export const SearchInput: React.FC<SearchInputProps> = ({}) => {
   const [value, setValue] = useState("");
   const [toggled, setToggle] = useState(false);
-  const [{ data, fetching }] = useSearchQuery({
+  const { data, loading } = useSearchQuery({
     variables: {
       query: value,
     },
@@ -21,7 +21,7 @@ export const SearchInput: React.FC<SearchInputProps> = ({}) => {
       <form
         onSubmit={(e) => {
           e.preventDefault();
-          if (!fetching && data?.search && data?.search.length > 0 && toggled) {
+          if (!loading && data?.search && data?.search.length > 0 && toggled) {
             router.push("/profile/" + data.search[0].username);
             setToggle(false)
           }
@@ -56,7 +56,7 @@ export const SearchInput: React.FC<SearchInputProps> = ({}) => {
         </button>
       </form>
 
-      {!fetching && data?.search && toggled && (
+      {!loading && data?.search && toggled && (
         <div className="bg-white absolute w-full">
           {data.search.map((user) => (
             <Link href="/profile/:username" as={`/profile/${user.username}`}>

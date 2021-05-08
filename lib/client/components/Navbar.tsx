@@ -2,14 +2,12 @@ import React from "react";
 import Link from "next/link";
 import { useMeQuery } from "../generated/graphql";
 import Authed from "./buttons/Authed";
-import { isServer } from "../utils/isServer";
-import { withUrqlClient } from "next-urql";
-import { createUrqlClient } from "../utils/createUrqlClient";
 import SearchInput from "./search/SearchInput";
+import { isServer } from "../utils/isServer";
 
 const Navbar: React.FC<{}> = ({}) => {
-  const [{ data, fetching }] = useMeQuery({
-    pause: isServer()
+  const { data, loading } = useMeQuery({
+    skip: isServer()
   })
   return (
     <div className="py-2 flex justify-between bg-gray-800 px-8">
@@ -30,7 +28,7 @@ const Navbar: React.FC<{}> = ({}) => {
         <SearchInput />
       </div>
 
-      {!fetching && data?.me ? (
+      {!loading && data?.me ? (
         <Authed username={data.me?.username} />
       ) : (
         <div className="flex">
@@ -50,4 +48,5 @@ const Navbar: React.FC<{}> = ({}) => {
   );
 };
 
-export default withUrqlClient(createUrqlClient)(Navbar);
+// export default withUrqlClient(createUrqlClient)(Navbar);
+export default Navbar;

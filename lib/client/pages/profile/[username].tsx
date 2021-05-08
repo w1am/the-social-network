@@ -1,38 +1,66 @@
-import React from "react";
+import React, { useEffect } from "react";
 import Wrapper from "../../components/Wrapper";
 import {
+  ProfileDocument,
   useSendFriendRequestMutation,
   useUnfriendMutation,
+  UnfriendMutation,
+  SendFriendRequestMutation
 } from "../../generated/graphql";
 import { useGetProfile } from "../../utils/useGetProfile";
-import { withUrqlClient } from "next-urql";
-import { createUrqlClient } from "../../utils/createUrqlClient";
 import { useIsAuth } from "../../utils/isAuth";
 import Submit from "../../components/buttons/Submit";
-import Link from 'next/link';
+import PostList from "../../components/post/PostList";
+import { withApollo } from "../../utils/withApollo";
+import { ApolloCache } from "@apollo/client";
 
 interface ProfileProps {}
 
+const writeQuery = (
+  cache: ApolloCache<SendFriendRequestMutation | UnfriendMutation>,
+  username: string,
+  association: number
+) => {
+  cache.writeQuery({
+    query: ProfileDocument,
+    data: {
+      __typename: "Query",
+      profile: {
+        __typename: "User",
+        association,
+      },
+    },
+    variables: {
+      username,
+    },
+  });
+};
+
 export const ProfilePage: React.FC<ProfileProps> = ({}) => {
-  const [{ data }] = useGetProfile();
-  const [ { fetching }, sendFriendRequest] = useSendFriendRequestMutation();
+  const { data } = useGetProfile();
+  const [sendFriendRequest, { loading }] = useSendFriendRequestMutation();
   const profile = useIsAuth();
-  const [{ fetching: unfriending }, unfriend] = useUnfriendMutation();
+  const [unfriend, { loading: unfriending }] = useUnfriendMutation();
 
   return (
-    <Wrapper size="lg">
+    <Wrapper size="xl">
       {!data ? (
         <p>No profile</p>
       ) : !data.profile ? (
         <p>No profile</p>
       ) : (
         <div>
-          <div className="border-b pb-8 border-gray-800">
-            <img style={{
-              objectFit: 'cover',
-              height:"200px",
-              width: '100%'
-            }} className="rounded-lg" src={data.profile.banner} alt="" />
+          <div className="pb-8 border-b border-gray-800">
+            <img
+              style={{
+                objectFit: "cover",
+                height: "200px",
+                width: "100%",
+              }}
+              className="rounded-lg"
+              src={data.profile.banner}
+              alt=""
+            />
             <p className="text-center -mt-24">
               <img
                 className="inline-block h-32 w-32 rounded-full ring-2 ring-white mb-3"
@@ -40,20 +68,48 @@ export const ProfilePage: React.FC<ProfileProps> = ({}) => {
                 alt=""
               />
             </p>
-            <p className="text-3xl text-center">
-              {data.profile.username}
+            <p className="text-3xl text-center">{data.profile.username}</p>
+            <p className="text-center italic text-gray-600 mt-2">
+              {data.profile?.intro}
             </p>
-            <p className="text-center italic text-gray-600 mt-2">{data.profile?.intro}</p>
             {profile?.me?.username !== data?.profile.username && (
               <div className="mt-5">
                 <Submit
-                  loading={fetching}
-                  label="Send friend request"
+                  colorScheme={
+                    data?.profile.association == 0
+                      ? "pending"
+                      : data?.profile.association == 1
+                      ? "unfriend"
+                      : "facebook"
+                  }
+                  loading={loading || unfriending}
+                  label={
+                    data?.profile.association == 0
+                      ? "Pending"
+                      : data?.profile.association == 1
+                      ? "Unfriend"
+                      : "Send friend request"
+                  }
                   onClick={async () => {
-                    if (data?.profile.id) {
-                      await sendFriendRequest({
-                        recipient: data?.profile.id,
-                      });
+                    if (
+                      data?.profile.association == 1 ||
+                      data?.profile.association == 0
+                    ) {
+                      if (data?.profile.id) {
+                        await unfriend({
+                          variables: { recipient: data?.profile.id },
+                          update: (cache) =>
+                            writeQuery(cache, data.profile.username, -1),
+                        });
+                      }
+                    } else {
+                      if (data?.profile.id) {
+                        await sendFriendRequest({
+                          variables: { recipient: data?.profile.id },
+                          update: (cache) =>
+                            writeQuery(cache, data.profile.username, 0),
+                        });
+                      }
                     }
                   }}
                 >
@@ -63,33 +119,7 @@ export const ProfilePage: React.FC<ProfileProps> = ({}) => {
             )}
           </div>
           <div className="mt-8">
-            <h1 className="page-header">
-              Friends ({data.profile.friends.length})
-            </h1>
-            {data.profile.friends.map((friend) => (
-              <div
-                key={friend.friendId}
-                className="flex justify-between bg-gray-800 p-3 mb-3 rounded-md last:mb-0"
-              >
-                <Link
-                  href="/profile/:username"
-                  as={`/profile/${friend.username}`}
-                >
-                  <p className="my-auto">@{friend.username}</p>
-                </Link>
-
-                <div className="my-auto">
-                  <Submit
-                    size="xs"
-                    onClick={async () =>
-                      await unfriend({ recipient: friend.friendId })
-                    }
-                    loading={unfriending}
-                    label="Unfriend"
-                  />
-                </div>
-              </div>
-            ))}
+            <PostList userId={data.profile.id} />
           </div>
         </div>
       )}
@@ -97,4 +127,4 @@ export const ProfilePage: React.FC<ProfileProps> = ({}) => {
   );
 };
 
-export default withUrqlClient(createUrqlClient)(ProfilePage);
+export default withApollo({ ssr: false })(ProfilePage);

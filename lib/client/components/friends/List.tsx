@@ -4,7 +4,7 @@ import { useFriendsQuery } from "../../generated/graphql";
 interface ListProps {}
 
 export const List: React.FC<ListProps> = ({}) => {
-  const [{ fetching: friendsFetching, data: friendsData }] = useFriendsQuery();
+  const { loading: friendsFetching, data: friendsData } = useFriendsQuery();
   return (
     <Fragment>
       {friendsFetching ? null : !friendsData ||

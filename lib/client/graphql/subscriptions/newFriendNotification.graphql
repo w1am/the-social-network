@@ -1,0 +1,6 @@
+subscription newFriendNotification {
+  newFriendNotification {
+    username
+    userId
+  }
+}

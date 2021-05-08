@@ -1,10 +1,13 @@
-import React from "react";
+import React, { Fragment } from "react";
 import Layout from "../components/Layout";
 import { AppProps } from "next/app";
 import ProgressBar from "@badrap/bar-of-progress";
 import Router from "next/router";
+import ReactNotification from 'react-notifications-component';
+import 'react-notifications-component/dist/theme.css'
 
 import "../styles/index.css";
+import { withApollo } from "../utils/withApollo";
 
 const progress = new ProgressBar({
   size: 3,
@@ -19,10 +22,13 @@ Router.events.on("routeChangeError", progress.finish);
 
 export const MyApp = ({ Component, pageProps }: AppProps) => {
   return (
-    <Layout>
-      <Component {...pageProps} />
-    </Layout>
+    <Fragment>
+      <ReactNotification />
+      <Layout>
+        <Component {...pageProps} />
+      </Layout>
+    </Fragment>
   );
 };
 
-export default MyApp;
+export default withApollo({ ssr: false })(MyApp);

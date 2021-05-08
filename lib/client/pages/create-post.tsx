@@ -6,13 +6,12 @@ import Submit from "../components/buttons/Submit";
 import { FieldError, useCreatePostMutation } from "../generated/graphql";
 import { toErrorMap } from "../utils/toErrorMap";
 import { useRouter } from 'next/router'
-import { withUrqlClient } from "next-urql";
-import { createUrqlClient } from "../utils/createUrqlClient";
+import { withApollo } from "../utils/withApollo";
 
 interface CreatePostProps {}
 
 export const CreatePost: React.FC<CreatePostProps> = ({}) => {
-  const [ ,createPost ] = useCreatePostMutation()
+  const [ createPost ] = useCreatePostMutation()
   const router = useRouter()
   return (
     <Wrapper size="sm">
@@ -26,7 +25,7 @@ export const CreatePost: React.FC<CreatePostProps> = ({}) => {
             errors.push({ field: "description", message: "Please enter something" })
             setErrors(toErrorMap([...errors]));
           } else {
-            await createPost(values)
+            await createPost({ variables: values })
             router.push('/')
           }
         }}
@@ -42,5 +41,4 @@ export const CreatePost: React.FC<CreatePostProps> = ({}) => {
   );
 };
 
-export default withUrqlClient(createUrqlClient)(CreatePost);
-// export default CreatePost;
+export default withApollo({ ssr: false })(CreatePost);

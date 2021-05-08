@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useCommentMutation } from "../../generated/graphql";
-import Link from 'next/link';
+import Link from "next/link";
+import gql from "graphql-tag";
 
 interface Comment {
   comment: string;
@@ -10,13 +11,21 @@ interface Comment {
 interface CommentSectionProps {
   comments: Comment[];
   postId: string;
+  username: string | undefined;
+}
+
+interface Comment {
+  id: number;
+  comment: string;
+  username: string;
 }
 
 export const CommentSection: React.FC<CommentSectionProps> = ({
   comments,
   postId,
+  username
 }) => {
-  const [, comment] = useCommentMutation();
+  const [comment] = useCommentMutation();
   const [value, setValue] = useState("");
   return (
     <div className={`py-3 pb-0 border-t-2 border-gray-700 mt-4`}>
@@ -25,7 +34,55 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
         onSubmit={async (e) => {
           e.preventDefault();
           if (value.trim().length > 0) {
-            await comment({ comment: value, postId: parseInt(postId) });
+            await comment({
+              variables: { comment: value, postId: parseInt(postId) },
+              update: (cache) => {
+                const data = cache.readFragment<{
+                  id: number;
+                  comments: [Comment];
+                  commentators: number;
+                }>({
+                  id: `Post:${postId}`,
+                  fragment: gql`
+                    fragment _ on Post {
+                      id
+                      commentators
+                      comments {
+                        id
+                        comment
+                        username
+                      }
+                    }
+                  `,
+                });
+
+                if (data) {
+                  cache.writeFragment({
+                    id: `Post:${postId}`,
+                    fragment: gql`
+                      fragment _ on Post {
+                        commentators
+                        comments
+                      }
+                    `,
+                    data: {
+                      commentators: data.commentators + 1,
+                      comments: [
+                        ...data.comments,
+                        {
+                          id:
+                            data.comments.indexOf(
+                              data.comments[data.comments.length - 1]
+                            ) + 1,
+                          comment: value,
+                          username,
+                        },
+                      ],
+                    },
+                  });
+                }
+              }
+            });
           }
           setValue("");
         }}
@@ -33,6 +90,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
         <input
           className="bg-gray-700 mb-3 text-gray-100 border border-gray-600 h-10 px-4 rounded-full text-sm focus:outline-none w-full"
           placeholder="Type a comment"
+          value={value}
           onChange={(e) => setValue(e.target.value)}
         />
         <div className="absolute right-3 top-0 text-gray-400 h-10 cursor-pointer rounded-full hover:text-gray-300">

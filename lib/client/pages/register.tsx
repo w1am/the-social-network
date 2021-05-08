@@ -6,14 +6,13 @@ import { Formik, Form } from "formik";
 import TextField from "../components/forms/TextField";
 import { toErrorMap } from "../utils/toErrorMap";
 import { useRouter } from 'next/router';
-import { withUrqlClient } from "next-urql";
-import { createUrqlClient } from "../utils/createUrqlClient";
+import { withApollo } from "../utils/withApollo";
 
 interface RegisterProps {}
 
 const register: React.FC<RegisterProps> = () => {
   const router = useRouter()
-  const [, register] = useRegisterMutation();
+  const [register] = useRegisterMutation();
   return (
     <Wrapper size="sm">
       <h1 className="page-header">Register</h1>
@@ -32,7 +31,7 @@ const register: React.FC<RegisterProps> = () => {
           if (password !== confirmPassword)
             errors.push({ field: "confirmPassword", message: "passwords do not match" });
 
-          const response = await register({ username, password });
+          const response = await register({ variables: { username, password } });
           if (response.data?.register.errors) {
             setErrors(
               toErrorMap([...response.data?.register.errors, ...errors])
@@ -55,4 +54,4 @@ const register: React.FC<RegisterProps> = () => {
   );
 };
 
-export default withUrqlClient(createUrqlClient)(register);
+export default withApollo({ ssr: false })(register);

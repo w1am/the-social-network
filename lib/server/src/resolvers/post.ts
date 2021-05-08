@@ -1,6 +1,6 @@
 import { MyContext } from "src/types";
-import { Arg, Ctx,  Field,  FieldResolver, Mutation, ObjectType, Query, Resolver, Root } from "type-graphql";
-import { getManager } from "typeorm";
+import { Arg, Ctx,  Field,  FieldResolver, Int, Mutation, ObjectType, Query, Resolver, Root } from "type-graphql";
+import { getConnection, getManager } from "typeorm";
 import { Post } from '../entities/Post';
 import { User } from "../entities/User";
 import { Vote } from "../entities/Vote";
@@ -18,8 +18,13 @@ class CommentField {
 @Resolver(Post)
 export class PostResolver {
   @FieldResolver(() => User)
-  user(@Root() post: Post) {
-    return User.findOne(post.userId)
+  async user(@Root() post: Post) : Promise<User | null> {
+    const user = await User.findOne(post.userId)
+    if (!user) {
+      return null
+    } else {
+      return user
+    }
   }
 
   @FieldResolver(() => [CommentField])
@@ -33,8 +38,20 @@ export class PostResolver {
     return comments
   }
 
+  @FieldResolver(() => Int)
+  async likes(@Root() post: Post) : Promise<number> {
+    const posts = await getConnection().createEntityManager().query(`
+      SELECT * FROM vote WHERE status=true AND "postId"=${post.id};
+    `)
+    if (posts) {
+      return posts.length
+    } else {
+      return 0
+    }
+  }
+
   @FieldResolver(() => Boolean)
-  async status(@Root() post: Post, @Ctx() { req } : MyContext) {
+  async status(@Root() post: Post, @Ctx() { req } : MyContext) : Promise<boolean> {
     if (req.session.userId) {
       const vote = await Vote.findOne({
         where: {
@@ -48,21 +65,25 @@ export class PostResolver {
         return false
       }
     } else {
-      return null
+      return false
     }
   }
 
-  @Query(() => [Post], { nullable: true })
+  @Query(() => [Post])
   async posts(
-    @Arg("limit") limit: number,
-    @Arg("cursor", { nullable: true }) cursor: number
+    @Arg("limit", () => Int) limit: number,
+    @Arg("cursor", () => Int, { nullable: true }) cursor: number,
+    @Arg("userId", () => Int, { nullable: true }) userId: number
   ) : Promise<Post[]> {
     const posts = await getManager().query(`
     SELECT * from post
-    WHERE id <= ${cursor}
+    ${cursor ? `WHERE id < ${cursor} ${userId ? `AND "userId"=${userId}` : ''}` : userId ? `WHERE "userId"=${userId}` : ''}
     ORDER BY id DESC
     LIMIT ${limit}
     `)
+    if (!posts) {
+      return []
+    }
     return posts
   }
 

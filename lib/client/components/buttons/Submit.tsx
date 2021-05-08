@@ -7,11 +7,21 @@ interface SubmitProps {
   onClick?: any;
   separator?: boolean;
   size?: "xs" | "s" | "md" | "lg";
+  colorScheme?: "pending" | "facebook" | "unfriend";
+  disabled?: boolean;
 }
 
-export const Submit: React.FC<SubmitProps> = ({ label, loading, size="s", separator=false, ...props }) => {
+export const Submit: React.FC<SubmitProps> = ({
+  label,
+  loading,
+  size = "s",
+  separator = false,
+  disabled=false,
+  colorScheme = "facebook",
+  ...props
+}) => {
   return (
-    <div className={`${separator ? 'mt-6' : ''}`}>
+    <div className={`${separator ? "mt-6" : ""}`}>
       <button
         type="submit"
         className={`
@@ -20,16 +30,32 @@ export const Submit: React.FC<SubmitProps> = ({ label, loading, size="s", separa
           text-${size}
           disabled:cursor-default
           cursor-pointer
-          rounded-md
-          disabled:bg-blue-500
-          bg-blue-600
-          text-white
-          hover:bg-blue-700
+          rounded-md 
+          ${
+            colorScheme == "facebook"
+              ? "disabled:bg-blue-500"
+              : "disabled:bg-gray-500"
+          }
+          ${
+            colorScheme == "facebook"
+              ? "bg-blue-600"
+              : colorScheme == "unfriend"
+              ? "bg-red-500"
+              : "bg-gray-500"
+          }
+          text-white 
+          ${
+            colorScheme == "facebook"
+              ? "hover:bg-blue-700"
+              : colorScheme == "unfriend"
+              ? "hover:bg-red-600"
+              : "hover:bg-gray-400"
+          }
           transition-colors
           ease-in-out
           duration-300
         `}
-        disabled={loading}
+        disabled={loading || disabled}
         {...props}
       >
         <div className="flex justify-center">
@@ -41,6 +67,6 @@ export const Submit: React.FC<SubmitProps> = ({ label, loading, size="s", separa
       </button>
     </div>
   );
-}
+};
 
 export default Submit

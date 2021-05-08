@@ -1,3 +1,4 @@
+import "reflect-metadata";
 import express from "express";
 import Redis from 'ioredis'
 import session from 'express-session'
@@ -14,6 +15,8 @@ import { FriendResolver } from "./resolvers/friend";
 import { UserResolver } from "./resolvers/user";
 import { GreetResolver } from "./resolvers/greet";
 import { PostResolver } from "./resolvers/post";
+import { RedisPubSub } from 'graphql-redis-subscriptions';
+import http from 'http';
 
 const main = async () => {
   await createConnection({
@@ -21,16 +24,18 @@ const main = async () => {
     database: "social",
     username: "postgres",
     password: "password",
-    logging: true,
+    logging: false,
     synchronize: true,
     migrations: [path.join(__dirname, './migrations/*')],
     entities: [path.join(__dirname, '/entities/**')],
   });
 
+  const myRedisPubSub = new RedisPubSub();
   const RedisStore = connectRedis(session)
   const redis = new Redis();
 
   const app = express();
+  const httpServer = http.createServer(app)
 
   app.use(
     cors({
@@ -39,39 +44,60 @@ const main = async () => {
     })
   );
 
-  app.use(
-    session({
-      name: COOKIE_NAME,
-      store: new RedisStore({ client: redis, disableTouch: true }),
-      cookie: {
-        maxAge: 1000 * 60 * 60 * 24 * 365 * 10,
-        httpOnly: true,
-        sameSite: "lax",
-        secure: __prod__,
-      },
-      saveUninitialized: false,
-      secret: COOKIE_PASSWORD,
-      resave: false,
-    })
-  );
+  const sessionMiddleware = session({
+    name: COOKIE_NAME,
+    store: new RedisStore({ client: redis, disableTouch: true }),
+    cookie: {
+      maxAge: 1000 * 60 * 60 * 24 * 365 * 10,
+      httpOnly: true,
+      sameSite: "lax",
+      secure: __prod__,
+    },
+    saveUninitialized: false,
+    secret: COOKIE_PASSWORD,
+    resave: false,
+  })
+
+  app.use(sessionMiddleware);
 
   app.get("/", (_, res) => res.render("<h1>Hello from Server</h1>"));
 
   const apolloServer = new ApolloServer({
     schema: await buildSchema({
-      resolvers: [UserResolver, PostResolver, FriendResolver, CommentResolver, GreetResolver, VoteResolver],
-      validate: false,
+      resolvers: [UserResolver, VoteResolver, PostResolver, FriendResolver, CommentResolver, GreetResolver],
+      pubSub: myRedisPubSub,
+      validate: false
     }),
-    context: ({ req, res }) => ({
+    subscriptions: {
+      path: "/subscriptions",
+      onConnect: (_params, ws: any) => {
+        return new Promise(res =>
+          sessionMiddleware(ws.upgradeReq, {} as any, () => {
+            res({ req: ws.upgradeReq })
+          })
+        )
+      },
+      onDisconnect: () => console.log("Client disconnected from subscriptions")
+    },
+    context: ({ req, res, connection }) => ({
       req,
       res,
       redis,
+      connection
     }),
   });
 
   apolloServer.applyMiddleware({ app, cors: false });
+  apolloServer.installSubscriptionHandlers(httpServer)
 
-  app.listen(4000, () => console.log(`App listening in port 4000`));
+  httpServer.listen(4000, () => {
+    console.log(
+      `Server ready at http://localhost:4000${apolloServer.graphqlPath}`
+    );
+    console.log(
+      `Subscriptions ready at ws://localhost:4000${apolloServer.subscriptionsPath}`
+    );
+  })
 };
 
 main().catch((err) => {

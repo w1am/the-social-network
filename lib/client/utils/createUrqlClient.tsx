@@ -48,7 +48,23 @@ export const createUrqlClient = (ssrExchange: any, ctx: any) => {
         updates: {
           Mutation: {
             unfriend: (_result, _args, cache, _info) => {
-              cache.invalidate("Query", "friends")
+              cache.invalidate("Query", "friends");
+              const allFields = cache.inspectFields("Query");
+              const fieldInfos = allFields.filter(
+                (info) => info.fieldName === "profile"
+              );
+              fieldInfos.forEach((fi) => {
+                cache.invalidate("Query", "profile", fi.arguments || {});
+              });
+            },
+            sendFriendRequest: (_result, _args, cache, _info) => {
+              const allFields = cache.inspectFields("Query");
+              const fieldInfos = allFields.filter(
+                (info) => info.fieldName === "profile"
+              );
+              fieldInfos.forEach((fi) => {
+                cache.invalidate("Query", "profile", fi.arguments || {});
+              });
             },
             respond: (_result, _args, cache, _info) =>
               cache.invalidate("Query", "friendRequests"),
@@ -71,7 +87,7 @@ export const createUrqlClient = (ssrExchange: any, ctx: any) => {
                   };
                 }
               });
-              invalidatePosts(cache)
+              invalidatePosts(cache);
             },
           },
         },

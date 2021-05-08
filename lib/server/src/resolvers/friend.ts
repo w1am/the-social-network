@@ -1,11 +1,54 @@
 import { MyContext } from "src/types";
-import { Arg, Ctx, FieldResolver, Int, Mutation, Query, Resolver, Root } from "type-graphql";
-import { getManager } from "typeorm";
+import { Arg, Ctx, Field, FieldResolver, Int, Mutation, ObjectType, PubSub, Query, Resolver, Root, Subscription } from "type-graphql";
+import { getConnection, getManager } from "typeorm";
 import { Friend } from "../entities/Friend";
 import { User } from "../entities/User";
+import { RedisPubSub } from "graphql-redis-subscriptions";
+
+const NOTIFICATION_TOPIC = 'SEND_FRIEND_REQUEST_NOTIFICATION'
+
+@ObjectType()
+class FriendNotification {
+  to: number;
+  from: number;
+  message: string;
+}
+
+@ObjectType()
+class NotificationResponse {
+  @Field(() => String)
+  username: string;
+  @Field(() => Int)
+  userId: number;
+}
 
 @Resolver(Friend)
 export class FriendResolver {
+  @Subscription(
+    () => NotificationResponse,
+    {
+      topics: NOTIFICATION_TOPIC,
+      nullable: true,
+      filter: ({ payload, args, context }) => {
+        if (payload.to == context.connection.context.req.session.userId) {
+          return true
+        } else {
+          return false
+        }
+      }
+    }
+  )
+  async newFriendNotification(
+    @Root() payload: FriendNotification,
+    // @Ctx() { connection }: MyContext
+  ): Promise<NotificationResponse> {
+    const from = await User.findOne(payload.from)
+    return {
+      username: from!.username,
+      userId: payload.from
+    }
+  }
+
   @FieldResolver(() => User)
   async user(@Root() friend: Friend) : Promise<User | null> {
     const user = await User.findOne(friend.friendId)
@@ -45,10 +88,11 @@ export class FriendResolver {
         friendId: friend
       }).execute()
 
-      await em.createQueryBuilder().insert().into(Friend).values({
-        friendId: req.session.userId,
+      await em.createQueryBuilder().update(Friend).set({
+        status
+      }).where({
         userId: friend,
-        status: 1
+        friendId: req.session.userId
       }).execute()
     })
 
@@ -61,16 +105,12 @@ export class FriendResolver {
     @Ctx() { req }: MyContext
   ) : Promise<Boolean> {
     await getManager().transaction(async em => {
-      em.createQueryBuilder().update(Friend).set({
-        status: -1
-      }).where({
+      await em.createQueryBuilder().delete().from(Friend).where({
         userId: req.session.userId,
         friendId: recipient
       }).execute()
 
-      em.createQueryBuilder().update(Friend).set({
-        status: -1
-      }).where({
+      await em.createQueryBuilder().delete().from(Friend).where({
         userId: recipient,
         friendId: req.session.userId
       }).execute()
@@ -81,21 +121,27 @@ export class FriendResolver {
   @Mutation(() => Boolean)
   async sendFriendRequest(
     @Arg('recipient', () => Int) recipient: number,
-    @Ctx() { req }: MyContext
+    @Ctx() { req }: MyContext,
+    @PubSub() pubsub: RedisPubSub
   ) : Promise<Boolean> {
-    const request = await Friend.findOne({
-      where: {
-        friendId: req.session.userId,
-        userId: recipient,
-        status: 0 | 1
-      }
-    })
+    const request = await getConnection().createEntityManager().query(`
+      SELECT * FROM friend
+      WHERE "friendId"=${req.session.userId} AND "userId"=${recipient} AND (status=0 OR status=1);
+    `)
     
-    if(!request && (recipient != req.session.userId)) {
-      Friend.create({
-        userId: recipient,
-        friendId: req.session.userId
-      }).save()
+    if ((!request || request.length == 0) && (recipient != req.session.userId)) {
+      await getManager().transaction(async em => {
+        await em.createQueryBuilder().insert().into(Friend).values({
+          userId: recipient,
+          friendId: req.session.userId
+        }).execute()
+
+        await em.createQueryBuilder().insert().into(Friend).values({
+          userId: req.session.userId,
+          friendId: recipient
+        }).execute()
+      })
+      pubsub.publish(NOTIFICATION_TOPIC, { to: recipient, from: req.session.userId, message: "New notification" })
       return true
     } else {
       return false

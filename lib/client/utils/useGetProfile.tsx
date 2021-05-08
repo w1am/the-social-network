@@ -8,6 +8,6 @@ export const useGetProfile = () => {
     variables: {
       username,
     },
-    pause: isServer(),
+    skip: isServer(),
   });
 };

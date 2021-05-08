@@ -3,14 +3,19 @@ import Link from "next/link";
 import Reactor from "./Reactor";
 import { Post, useVoteMutation } from "../../generated/graphql";
 import CommentSection from "./CommentSection";
+import gql from "graphql-tag";
+import { useGetMe } from "../../utils/useGetMe";
 
 interface PostItemProps {
   post: Post | any;
 }
 
 export const PostItem: React.FC<PostItemProps> = ({ post }) => {
-  const [, vote] = useVoteMutation();
+  const [vote] = useVoteMutation();
   const [open, setOpen] = useState<boolean>(false);
+
+  const { username } = useGetMe();
+
   return (
     <div className="bg-gray-800 px-3 py-5 mb-3 rounded">
       <Link href="/profile/:username" as={`/profile/${post.user.username}`}>
@@ -23,13 +28,51 @@ export const PostItem: React.FC<PostItemProps> = ({ post }) => {
         <p className="my-3 text-gray-300 mr-2">
           {post.likes} {post.likes > 1 ? "Likes" : "Like"}
         </p>
-        <p className="my-3 text-gray-300 cursor-pointer" onClick={() => setOpen(!open)}>
+        <p
+          className="my-3 text-gray-300 cursor-pointer hover:underline"
+          onClick={() => setOpen(!open)}
+        >
           {post.commentators} {post.commentators > 1 ? "Comments" : "Comment"}
         </p>
       </div>
       <div className="flex">
         <Reactor
-          onClick={async () => await vote({ postId: parseInt(post.id) })}
+          onClick={async () =>
+            await vote({
+              variables: { postId: parseInt(post.id) },
+              update: (cache) => {
+                const data = cache.readFragment<{
+                  id: number;
+                  likes: number;
+                  status: boolean;
+                }>({
+                  id: `Post:${post.id}`,
+                  fragment: gql`
+                    fragment _ on Post {
+                      id
+                      likes
+                      status
+                    }
+                  `,
+                });
+                if (data) {
+                  cache.writeFragment({
+                    id: `Post:${post.id}`,
+                    fragment: gql`
+                      fragment __ on Post {
+                        likes
+                        status
+                      }
+                    `,
+                    data: {
+                      likes: data.status ? data.likes - 1 : data.likes + 1,
+                      status: !data.status,
+                    },
+                  });
+                }
+              },
+            })
+          }
           label={post.status ? "Liked" : "Like"}
         >
           {post.status ? (
@@ -79,7 +122,7 @@ export const PostItem: React.FC<PostItemProps> = ({ post }) => {
           </svg>
         </Reactor>
       </div>
-      {open && <CommentSection postId={post.id} comments={post.comments} />}
+      {open && <CommentSection username={username} postId={post.id} comments={post.comments} />}
     </div>
   );
 };

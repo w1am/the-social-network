@@ -4,6 +4,7 @@ import {
   Field,
   FieldResolver,
   InputType,
+  Int,
   Mutation,
   ObjectType,
   Query,
@@ -15,7 +16,8 @@ import { hash, verify } from "argon2";
 import { validateUsername, validatePassword } from "../utils/inputValidator";
 import { MyContext } from "../types";
 import { COOKIE_NAME } from "../constants";
-import { getConnection } from "typeorm";
+import { getConnection, Not } from "typeorm";
+import { Friend } from "../entities/Friend";
 
 @ObjectType()
 class FieldError {
@@ -63,6 +65,20 @@ export class UserResolver {
     `)
   }
 
+  @FieldResolver(() => Int)
+  async association(@Root() user: User, @Ctx() { req } : MyContext) : Promise<number> {
+    const association = await Friend.findOne({ where: {
+      userId: req.session.userId,
+      friendId: user.id,
+      status: Not(-1)
+    }})
+    if (association) {
+      return association.status
+    } else {
+      return -1
+    }
+  }
+
   @Query(() => User)
   async profile(@Arg('username', () => String) username: string): Promise<User | null> {
     const user = await User.findOne({ where: { username } })
@@ -73,14 +89,22 @@ export class UserResolver {
     }
   }
 
-  @Query(() => [User])
+  @Query(() => [User], { nullable: true })
   async search(@Arg('query', () => String) query: string) : Promise<User[] | null> {
-    if (query.trim().length > 0) {
-      return await getConnection().createEntityManager().query(`
-        select * from "user" where username like '%${query.toLowerCase()}%';
+    if (query.trim() == "") {
+      return null
+    } else {
+      const users = await getConnection().createEntityManager().query(`
+        SELECT * FROM "user"
+        WHERE username
+        LIKE '%${query.toLowerCase()}%';
       `)
+      if (!users) {
+        return null
+      } else {
+        return users
+      }
     }
-    return null
   }
 
   @Query(() => User, { nullable: true })

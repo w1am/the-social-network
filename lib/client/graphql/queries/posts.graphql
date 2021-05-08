@@ -1,9 +1,11 @@
-query posts($limit: Float!, $cursor: Float!) {
-  posts(limit: $limit, cursor: $cursor) {
+query posts($limit: Int!, $cursor: Int, $userId: Int) {
+  posts(limit: $limit, cursor: $cursor, userId: $userId) {
     id
     description
     userId
     commentators
+    status
+    likes
     comments {
       id
       comment
@@ -13,7 +15,5 @@ query posts($limit: Float!, $cursor: Float!) {
       id
       username
     }
-    status
-    likes
   }
 }
