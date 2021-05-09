@@ -1,7 +1,7 @@
 ### The Social Network
 
 Building a full stack web application using Typescript, GraphQL, Postgres and Apollo
-![enter image description here](https://i.imgur.com/4wEtJgZ.png)
+![enter image description here](https://i.imgur.com/9oiryLu.png)
 
 
 **Why?**
