@@ -40,7 +40,6 @@ const client = (ctx: NextPageContext) => new ApolloClient({
           posts: {
             keyArgs: false,
             merge(existing = [], incoming) {
-              console.log(existing, incoming)
               return [...existing, ...incoming];
             },
           }

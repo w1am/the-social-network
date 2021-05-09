@@ -37,6 +37,11 @@ export const notifications: React.FC<notificationsProps> = ({}) => {
                   onClick={async () => {
                     await respond({
                       variables: { status: 1, friendId: friend.user.id },
+                      update: (cache) => {
+                        cache.evict({
+                          id: `Friend:${friend.id}`
+                        })
+                      }
                     });
                   }}
                   className="my-auto mr-2 text-gray-200 bg-green-600 p-1 px-3 hover:text-gray-50 hover:bg-green-500 rounded"

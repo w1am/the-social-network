@@ -59,13 +59,12 @@ export const SearchInput: React.FC<SearchInputProps> = ({}) => {
       {!loading && data?.search && toggled && (
         <div className="bg-white absolute w-full">
           {data.search.map((user) => (
-            <Link href="/profile/:username" as={`/profile/${user.username}`}>
+            <Link key={user.id} href="/profile/:username" as={`/profile/${user.username}`}>
               <div
                 onClick={() => {
                   setToggle(false);
                 }}
                 className="shadow-lg cursor-pointer p-3 bg-gray-900 border-2 border-gray-800 hover:bg-gray-800 hover:border-gray-700 transition ease-in-out duration-100"
-                key={user.id}
               >
                 <p className="text-gray-200">@{user.username}</p>
               </div>

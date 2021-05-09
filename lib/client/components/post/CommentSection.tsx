@@ -113,12 +113,14 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
       {comments.map(({ comment, username }, index: number) => (
         <div
           key={index}
-          className="text-white bg-gray-700 px-4 py-2 rounded-xl w-max mb-2 last:mb-0"
+          className="text-white max-w-md bg-gray-700 px-4 py-2 rounded-xl w-max mb-2 last:mb-0"
         >
           <Link href="/">
             <p className="text-sm font-semibold cursor-pointer">{username}</p>
           </Link>
-          <p className="text-sm">{comment}</p>
+          <p className="text-sm">
+            {comment}
+          </p>
         </div>
       ))}
     </div>

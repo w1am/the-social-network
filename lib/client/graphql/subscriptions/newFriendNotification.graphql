@@ -2,5 +2,6 @@ subscription newFriendNotification {
   newFriendNotification {
     username
     userId
+    message
   }
 }

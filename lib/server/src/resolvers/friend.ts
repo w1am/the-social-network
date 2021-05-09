@@ -20,6 +20,8 @@ class NotificationResponse {
   username: string;
   @Field(() => Int)
   userId: number;
+  @Field(() => String)
+  message: string;
 }
 
 @Resolver(Friend)
@@ -29,7 +31,9 @@ export class FriendResolver {
     {
       topics: NOTIFICATION_TOPIC,
       nullable: true,
-      filter: ({ payload, args, context }) => {
+      filter: ({ payload, context }) => {
+        console.log("to", payload.to)
+        console.log("userId", context.connection.context.req.session.userId)
         if (payload.to == context.connection.context.req.session.userId) {
           return true
         } else {
@@ -40,12 +44,12 @@ export class FriendResolver {
   )
   async newFriendNotification(
     @Root() payload: FriendNotification,
-    // @Ctx() { connection }: MyContext
   ): Promise<NotificationResponse> {
     const from = await User.findOne(payload.from)
     return {
       username: from!.username,
-      userId: payload.from
+      userId: payload.from,
+      message: payload.message
     }
   }
 
@@ -141,7 +145,10 @@ export class FriendResolver {
           friendId: recipient
         }).execute()
       })
-      pubsub.publish(NOTIFICATION_TOPIC, { to: recipient, from: req.session.userId, message: "New notification" })
+      pubsub.publish(
+        NOTIFICATION_TOPIC,
+        { to: recipient, from: req.session.userId, message: `New friend request` }
+      )
       return true
     } else {
       return false

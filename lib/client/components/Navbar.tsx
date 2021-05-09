@@ -48,5 +48,4 @@ const Navbar: React.FC<{}> = ({}) => {
   );
 };
 
-// export default withUrqlClient(createUrqlClient)(Navbar);
 export default Navbar;

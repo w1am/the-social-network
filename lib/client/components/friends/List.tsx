@@ -1,5 +1,6 @@
 import React, { Fragment } from "react";
 import { useFriendsQuery } from "../../generated/graphql";
+import Link from "next/link";
 
 interface ListProps {}
 
@@ -10,9 +11,9 @@ export const List: React.FC<ListProps> = ({}) => {
       {friendsFetching ? null : !friendsData ||
         friendsData.friends.length == 0 ? (
         <div className="mt-8">
-          <h1 className="page-header">Suggestions</h1>
+          <h1 className="page-header">Friends</h1>
           <div className="bg-gray-800 px-3 py-5 rounded">
-            <p>No suggestions</p>
+            <p>No friends</p>
           </div>
         </div>
       ) : (
@@ -31,9 +32,11 @@ export const List: React.FC<ListProps> = ({}) => {
                     transition ease-in-out duration-100
                   "
               >
-                <p className="cursor-pointer w-min my-auto" key={friend.id}>
-                  @{friend.user.username}
-                </p>
+                <Link href="/profile/:username" as={`/profile/${friend.user.username}`}>
+                  <p className="cursor-pointer w-min my-auto" key={friend.id}>
+                    @{friend.user.username}
+                  </p>
+                </Link>
 
                 <svg
                   xmlns="http://www.w3.org/2000/svg"

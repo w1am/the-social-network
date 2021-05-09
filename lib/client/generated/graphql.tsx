@@ -100,6 +100,7 @@ export type NotificationResponse = {
   __typename?: 'NotificationResponse';
   username: Scalars['String'];
   userId: Scalars['Int'];
+  message: Scalars['String'];
 };
 
 export type Post = {
@@ -389,7 +390,7 @@ export type NewFriendNotificationSubscription = (
   { __typename?: 'Subscription' }
   & { newFriendNotification?: Maybe<(
     { __typename?: 'NotificationResponse' }
-    & Pick<NotificationResponse, 'username' | 'userId'>
+    & Pick<NotificationResponse, 'username' | 'userId' | 'message'>
   )> }
 );
 
@@ -954,6 +955,7 @@ export const NewFriendNotificationDocument = gql`
   newFriendNotification {
     username
     userId
+    message
   }
 }
     `;

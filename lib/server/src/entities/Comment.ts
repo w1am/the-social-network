@@ -22,6 +22,6 @@ export class Comment extends BaseEntity {
   @Column()
   postId: number
 
-  @ManyToOne(() => User, (post) => post.comments)
+  @ManyToOne(() => Post, (post) => post.comments)
   post: Post
 }
